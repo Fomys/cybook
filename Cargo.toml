@@ -1,0 +1,2 @@
+[workspace]
+members = ["utils", "cyio", "cybuf", "cygui"]
