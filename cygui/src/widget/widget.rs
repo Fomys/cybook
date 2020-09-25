@@ -1,5 +1,6 @@
+use crate::Handler;
 use cybuf::Drawable;
 
-pub trait Widget<T: Drawable> {
-    fn draw(&mut self, buffer: &mut T);
+pub trait Widget<D: Drawable, T: Clone>: Handler<T> {
+    fn draw(&self, buffer: &mut D);
 }

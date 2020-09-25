@@ -11,4 +11,4 @@ cybuf = {path="../cybuf"}
 cyio = {path="../cyio"}
 utils = {path = "../utils"}
 cgmath = "0.17"
-fontdue = "0.1"
+fontdue = "0.3"

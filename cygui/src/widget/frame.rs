@@ -1,57 +1,47 @@
-use crate::event::{Event, EventState};
 use crate::widget::Widget;
 use crate::Handler;
 use cybuf::Drawable;
 
-pub struct Frame<D>
+pub struct Frame<D, T>
 where
     D: Drawable,
 {
-    handlers: Vec<Box<dyn Handler>>,
-    widgets: Vec<Box<dyn Widget<D>>>,
+    widgets: Vec<Box<dyn Widget<D, T>>>,
 }
 
-impl<D> Frame<D>
+impl<D, T> Frame<D, T>
 where
     D: Drawable,
+    T: Clone,
 {
     pub fn new() -> Self {
-        Self {
-            handlers: vec![],
-            widgets: vec![],
-        }
+        Self { widgets: vec![] }
     }
 
-    pub fn add_widget(&mut self, widget: Box<dyn Widget<D>>) {
+    pub fn add_widget(&mut self, widget: Box<dyn Widget<D, T>>) {
         self.widgets.push(widget);
     }
-
-    pub fn add_handler(&mut self, handler: Box<dyn Handler>) {
-        self.handlers.push(handler);
-    }
 }
 
-impl<D> Handler for Frame<D>
+impl<D, T> Handler<T> for Frame<D, T>
 where
     D: Drawable,
+    T: Clone,
 {
-    fn handle_event(&mut self, event: &dyn Event) -> EventState {
-        for handler in self.handlers.iter_mut() {
-            match handler.handle_event(event) {
-                EventState::Handled => return EventState::Handled,
-                EventState::Pending => {}
-            }
+    fn handle_event(&mut self, event: T) {
+        for handler in self.widgets.iter_mut() {
+            handler.handle_event(event.clone())
         }
-        EventState::Pending
     }
 }
 
-impl<D> Widget<D> for Frame<D>
+impl<D, T> Widget<D, T> for Frame<D, T>
 where
+    T: Clone,
     D: Drawable,
 {
-    fn draw(&mut self, buffer: &mut D) {
-        for widget in self.widgets.iter_mut() {
+    fn draw(&self, buffer: &mut D) {
+        for widget in self.widgets.iter() {
             widget.draw(buffer);
         }
     }

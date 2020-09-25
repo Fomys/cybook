@@ -1,5 +1,5 @@
 use cgmath::Vector2;
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Touch {
     None,
     One(Vector2<usize>),
@@ -44,7 +44,7 @@ impl From<[u8; 16]> for Touch {
         }
     }
 }
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Key {
     Left,
     Right,
@@ -65,7 +65,7 @@ impl From<[u8; 16]> for Key {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Event {
     TouchPressed(Touch),
     TouchMove(Touch),
