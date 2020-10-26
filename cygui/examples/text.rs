@@ -1,8 +1,5 @@
-use cygui::{widget, Window};
-use std::error::Error;
-use std::fs::File;
-use std::io::Write;
-use std::sync::Arc;
+use cygui::{utils::font::Font, widget::text::TextBuilder, Window};
+use std::{error::Error, rc::Rc};
 use utils::Color;
 
 #[derive(Clone)]
@@ -11,29 +8,27 @@ enum Event {}
 pub fn main() -> Result<(), Box<dyn Error>> {
     let mut w = Window::<Event>::new()?;
 
-    let font = include_bytes!("../../Roboto-Regular.ttf") as &[u8];
-    let font = Arc::new(fontdue::Font::from_bytes(
-        font,
+    let font = Rc::new(fontdue::Font::from_bytes(
+        include_bytes!("../../Roboto-Regular.ttf") as &[u8],
         fontdue::FontSettings {
             scale: 100.0,
             ..fontdue::FontSettings::default()
         },
     )?);
-    let (metrics, bitmap) = font.rasterize('C', 100.0);
 
-    // Output
-    let mut o = File::create("fontdue.pgm").unwrap();
-    let _ = o.write(format!("P5\n{} {}\n255\n", metrics.width, metrics.height).as_bytes());
-    let _ = o.write(&bitmap);
-
-    w.frame.add_widget(Box::new(widget::Text::new(
-        "Hello World 😀 !".into(),
+    let text = TextBuilder::new(
         (50, 50).into(),
-        100.0,
-        font.clone(),
-        Color::BLACK,
-        Color::WHITE,
-    )));
+        Font {
+            font,
+            size: 100.0,
+            fg: Color { g: 255, a: 0 },
+            bg: Color { g: 0, a: 0 },
+        },
+    )
+    .with_text("Hello World 😀 !".into())
+    .build();
+
+    w.frame.add_widget(Box::new(text));
 
     w.mainloop()?;
     Ok(())

@@ -1,19 +1,22 @@
-use crate::widget::{Frame, Widget};
+use crate::{
+    widget::{Frame, Widget},
+    Event, Handler,
+};
 use cybuf::{Drawable, Framebuffer};
-
-use std::error::Error;
-use std::path::Path;
-
-use crate::Handler;
-use std::sync::mpsc;
-use std::thread::sleep;
-use std::time::{Duration, Instant};
+use cyio::Input;
+use std::{
+    error::Error,
+    path::Path,
+    sync::mpsc,
+    thread,
+    time::{Duration, Instant},
+};
 use utils::Color;
 
 pub struct Window<'f, T> {
     framebuffer: Framebuffer<'f>,
-    rx: mpsc::Receiver<T>,
-    pub tx: mpsc::Sender<T>,
+    rx: mpsc::Receiver<Event<T>>,
+    pub tx: mpsc::Sender<Event<T>>,
     pub frame: Frame<Framebuffer<'f>, T>,
 }
 
@@ -23,8 +26,11 @@ where
 {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let (tx, rx) = mpsc::channel();
-        let framebuffer = Framebuffer::new(Path::new("/dev/fb0"))?;
-        let frame = Frame::new();
+        let mut framebuffer = Framebuffer::new(Path::new("/dev/fb0"))?;
+        framebuffer.fill(Color::WHITE);
+        framebuffer.update()?;
+        let mut frame = Frame::new();
+        frame.attach(tx.clone());
         Ok(Self {
             framebuffer,
             rx,
@@ -34,12 +40,22 @@ where
     }
 
     pub fn mainloop(&mut self) -> Result<(), Box<dyn Error>> {
+        let mut input = Input::new()?;
+        let i_tx = self.tx.clone();
+        thread::spawn(move || loop {
+            match input.get_event() {
+                Ok(event) => {
+                    i_tx.send(Event::IO(event)).unwrap_or(());
+                }
+                _ => {}
+            }
+        });
         let mut last_update = Instant::now();
         loop {
             for event in self.rx.try_iter() {
                 self.frame.handle_event(event);
             }
-            if last_update.elapsed() > Duration::from_millis(300) {
+            if last_update.elapsed() > Duration::from_millis(500) {
                 self.frame.draw(&mut self.framebuffer);
                 self.framebuffer.update()?;
                 last_update = Instant::now();

@@ -5,20 +5,20 @@ use utils::Color;
 
 pub trait Drawable {
     fn fill(&mut self, color: Color);
-    fn put_pixel(&mut self, p: Vector2<usize>, color: Color);
-    fn get_pixel(&self, p: Vector2<usize>) -> Color;
+    fn put_pixel(&mut self, p: Vector2<isize>, color: Color);
+    fn get_pixel(&self, p: Vector2<isize>) -> Color;
 
-    fn horizontal_line(&mut self, y: usize, color: Color);
-    fn part_horizontal_line(&mut self, y: usize, x_start: usize, x_stop: usize, color: Color);
+    fn horizontal_line(&mut self, y: isize, color: Color);
+    fn part_horizontal_line(&mut self, y: isize, x_start: isize, x_stop: isize, color: Color);
 
-    fn vertical_line(&mut self, x: usize, color: Color);
-    fn part_vertical_line(&mut self, x: usize, y_start: usize, y_stop: usize, color: Color);
+    fn vertical_line(&mut self, x: isize, color: Color);
+    fn part_vertical_line(&mut self, x: isize, y_start: isize, y_stop: isize, color: Color);
 
     fn flush(&mut self) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    fn draw_line(&mut self, mut start: Vector2<usize>, stop: Vector2<usize>, color: Color) {
+    fn draw_line(&mut self, mut start: Vector2<isize>, stop: Vector2<isize>, color: Color) {
         let dx = (stop.x as isize - start.x as isize).abs();
         let sx = start.x < stop.x;
         let dy = -(stop.y as isize - start.y as isize).abs();
@@ -49,5 +49,5 @@ pub trait Drawable {
         }
     }
 
-    fn put_buffer(&mut self, offset: Vector2<usize>, buffer: &Buffer);
+    fn put_buffer(&mut self, offset: Vector2<isize>, buffer: &Buffer);
 }

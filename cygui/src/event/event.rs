@@ -5,4 +5,8 @@ pub enum EventState {
     Pending,
 }
 
-pub trait Event: Send + Debug {}
+#[derive(Clone, Debug)]
+pub enum Event<T> {
+    IO(cyio::Event),
+    User(T),
+}

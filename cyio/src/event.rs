@@ -11,32 +11,32 @@ impl From<[u8; 16]> for Touch {
         match event {
             [_, _, _, lx1, mx1, ly1, my1, _, _, _, _, 0x01, _, _, _, _] => Touch::One(
                 (
-                    utils::SCREEN_SIZE.x
-                        - ((lx1 as usize + ((mx1 as usize) << 8)) * utils::SCREEN_SIZE.x)
-                            / utils::TOUCH_SIZE.x,
-                    utils::SCREEN_SIZE.y
-                        - ((ly1 as usize + ((my1 as usize) << 8)) * utils::SCREEN_SIZE.y)
-                            / utils::TOUCH_SIZE.y,
+                    utils::SCREEN_SIZE.x as usize
+                        - ((lx1 as usize + ((mx1 as usize) << 8)) * utils::SCREEN_SIZE.x as usize)
+                            / utils::TOUCH_SIZE.x as usize,
+                    utils::SCREEN_SIZE.y as usize
+                        - ((ly1 as usize + ((my1 as usize) << 8)) * utils::SCREEN_SIZE.y as usize)
+                            / utils::TOUCH_SIZE.y as usize,
                 )
                     .into(),
             ),
             [_, _, _, lx1, mx1, ly1, my1, lx2, mx2, ly2, my2, 0x02, _, _, _, _] => Touch::Two(
                 (
-                    utils::SCREEN_SIZE.x
-                        - ((lx1 as usize + ((mx1 as usize) << 8)) * utils::SCREEN_SIZE.x)
-                            / utils::TOUCH_SIZE.x,
-                    utils::SCREEN_SIZE.y
-                        - ((ly1 as usize + ((my1 as usize) << 8)) * utils::SCREEN_SIZE.y)
-                            / utils::TOUCH_SIZE.y,
+                    utils::SCREEN_SIZE.x as usize
+                        - ((lx1 as usize + ((mx1 as usize) << 8)) * utils::SCREEN_SIZE.x as usize)
+                            / utils::TOUCH_SIZE.x as usize,
+                    utils::SCREEN_SIZE.y as usize
+                        - ((ly1 as usize + ((my1 as usize) << 8)) * utils::SCREEN_SIZE.y as usize)
+                            / utils::TOUCH_SIZE.y as usize,
                 )
                     .into(),
                 (
-                    utils::SCREEN_SIZE.x
-                        - ((lx2 as usize + ((mx2 as usize) << 8)) * utils::SCREEN_SIZE.x)
-                            / utils::TOUCH_SIZE.x,
-                    utils::SCREEN_SIZE.y
-                        - ((ly2 as usize + ((my2 as usize) << 8)) * utils::SCREEN_SIZE.y)
-                            / utils::TOUCH_SIZE.y,
+                    utils::SCREEN_SIZE.x as usize
+                        - ((lx2 as usize + ((mx2 as usize) << 8)) * utils::SCREEN_SIZE.x as usize)
+                            / utils::TOUCH_SIZE.x as usize,
+                    utils::SCREEN_SIZE.y as usize
+                        - ((ly2 as usize + ((my2 as usize) << 8)) * utils::SCREEN_SIZE.y as usize)
+                            / utils::TOUCH_SIZE.y as usize,
                 )
                     .into(),
             ),
@@ -69,7 +69,7 @@ impl From<[u8; 16]> for Key {
 pub enum Event {
     TouchPressed(Touch),
     TouchMove(Touch),
-    TouchReleased(Touch),
+    TouchReleased,
     Key(Key),
     Unknown([u8; 16]),
 }
@@ -80,15 +80,13 @@ impl From<[u8; 16]> for Event {
             [0x6b, 0x80, 0x10, _, _, _, _, _, _, _, _, _, _, _, _, _] => {
                 Event::Key(Key::from(event))
             }
-            [0x74, 0x0c, 0x10, _, _, _, _, _, _, _, _, _, _, _, _, _] => {
+            [0x74, 0xc0, 0x10, _, _, _, _, _, _, _, _, _, _, _, _, _] => {
                 Event::TouchPressed(Touch::from(event))
             }
             [0x74, 0x80, 0x10, _, _, _, _, _, _, _, _, _, _, _, _, _] => {
                 Event::TouchMove(Touch::from(event))
             }
-            [0x74, 0x40, 0x10, _, _, _, _, _, _, _, _, _, _, _, _, _] => {
-                Event::TouchReleased(Touch::from(event))
-            }
+            [0x74, 0x40, 0x10, _, _, _, _, _, _, _, _, _, _, _, _, _] => Event::TouchReleased,
             _ => Event::Unknown(event),
         }
     }

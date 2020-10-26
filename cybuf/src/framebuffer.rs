@@ -19,7 +19,11 @@ impl<'a> Framebuffer<'a> {
     pub fn new(path: &'a Path) -> Result<Self, Box<dyn Error>> {
         let device = OpenOptions::new().write(true).read(true).open(path)?;
         let frame_length = utils::SCREEN_SIZE.x * utils::SCREEN_SIZE.y;
-        let frame = unsafe { MmapOptions::new().len(frame_length).map_mut(&device) }?;
+        let frame = unsafe {
+            MmapOptions::new()
+                .len(frame_length as usize)
+                .map_mut(&device)
+        }?;
         Ok(Self {
             device,
             frame,
@@ -56,35 +60,37 @@ impl<'a> Drawable for Framebuffer<'a> {
         );
     }
 
-    fn put_pixel(&mut self, p: Vector2<usize>, color: Color) {
+    fn put_pixel(&mut self, p: Vector2<isize>, color: Color) {
         if p.x < SCREEN_SIZE.x && p.y < SCREEN_SIZE.y {
-            self.frame[p.y * SCREEN_SIZE.x + p.x] = color.g;
+            self.frame[(p.y * SCREEN_SIZE.x + p.x) as usize] = color.g;
         }
     }
 
-    fn get_pixel(&self, p: Vector2<usize>) -> Color {
+    fn get_pixel(&self, p: Vector2<isize>) -> Color {
         Color {
-            g: self.frame[p.y * SCREEN_SIZE.x + p.x],
+            g: self.frame[(p.y * SCREEN_SIZE.x + p.x) as usize],
             a: 255,
         }
     }
 
-    fn horizontal_line(&mut self, y: usize, color: Color) {
+    fn horizontal_line(&mut self, y: isize, color: Color) {
         if y < SCREEN_SIZE.y {
-            self.frame[y * SCREEN_SIZE.x..((y + 1) * SCREEN_SIZE.x)].copy_from_slice(
-                (0..SCREEN_SIZE.x)
-                    .map(|_| color.g)
-                    .collect::<Vec<u8>>()
-                    .as_ref(),
-            );
+            self.frame[(y * SCREEN_SIZE.x) as usize..(((y + 1) * SCREEN_SIZE.x) as usize)]
+                .copy_from_slice(
+                    (0..SCREEN_SIZE.x)
+                        .map(|_| color.g)
+                        .collect::<Vec<u8>>()
+                        .as_ref(),
+                );
         }
     }
 
-    fn part_horizontal_line(&mut self, y: usize, x_start: usize, x_stop: usize, color: Color) {
-        if y < SCREEN_SIZE.y {
+    fn part_horizontal_line(&mut self, y: isize, x_start: isize, x_stop: isize, color: Color) {
+        if 0 < y && y < SCREEN_SIZE.y {
             let x_start = x_start.max(SCREEN_SIZE.x);
             let x_stop = x_stop.max(SCREEN_SIZE.x);
-            self.frame[y * SCREEN_SIZE.x + x_start..(y * SCREEN_SIZE.x + (x_stop))]
+            self.frame
+                [(y * SCREEN_SIZE.x + x_start) as usize..((y * SCREEN_SIZE.x + (x_stop)) as usize)]
                 .copy_from_slice(
                     (0..(x_stop - x_start))
                         .map(|_| color.g)
@@ -94,20 +100,20 @@ impl<'a> Drawable for Framebuffer<'a> {
         }
     }
 
-    fn vertical_line(&mut self, x: usize, color: Color) {
+    fn vertical_line(&mut self, x: isize, color: Color) {
         if x < SCREEN_SIZE.x {
             for i in 0..SCREEN_SIZE.y {
-                self.frame[i * SCREEN_SIZE.x + x] = color.g;
+                self.frame[(i * SCREEN_SIZE.x + x) as usize] = color.g;
             }
         }
     }
 
-    fn part_vertical_line(&mut self, x: usize, y_start: usize, y_stop: usize, color: Color) {
+    fn part_vertical_line(&mut self, x: isize, y_start: isize, y_stop: isize, color: Color) {
         if x < SCREEN_SIZE.x {
             let y_start = y_start.min(SCREEN_SIZE.y);
             let y_stop = y_stop.min(SCREEN_SIZE.y);
             for i in y_start..y_stop {
-                self.frame[i * SCREEN_SIZE.x + x] = color.g;
+                self.frame[(i * SCREEN_SIZE.x + x) as usize] = color.g;
             }
         }
     }
@@ -118,7 +124,7 @@ impl<'a> Drawable for Framebuffer<'a> {
     }
 
     /// TODO: Optimiser la copie ligne par ligne
-    fn put_buffer(&mut self, offset: Vector2<usize>, buffer: &Buffer) {
+    fn put_buffer(&mut self, offset: Vector2<isize>, buffer: &Buffer) {
         for x in 0..buffer.size.x {
             for y in 0..buffer.size.y {
                 self.put_pixel(

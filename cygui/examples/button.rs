@@ -3,6 +3,7 @@ use cybuf::Drawable;
 use cygui::{
     utils::font::Font,
     widget::{
+        button::{ButtonBuilder, ButtonEvent},
         text::{Text, TextBuilder},
         Widget,
     },
@@ -13,9 +14,13 @@ use std::{error::Error, rc::Rc};
 use utils::Color;
 
 #[derive(Debug, Clone)]
-enum Event {}
+enum Event {
+    Pressed,
+    Enter,
+    Leave,
+    Released,
+}
 
-// Création d'un widget particulier, qui va permettre l'affichage des events
 pub struct EventWidget<D, T>
 where
     D: Drawable,
@@ -55,7 +60,7 @@ where
 
     fn handle_event(&mut self, event: cygui::Event<Event>) {
         println!("{:?}", event);
-        self.text.update_text(format!("Event: {:?}", event));
+        self.text.update_text(format!("E: {:?}", event));
     }
 }
 
@@ -70,19 +75,29 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         },
     )?);
 
+    let font = Font {
+        font,
+        size: 50.0,
+        fg: Color { g: 255, a: 0 },
+        bg: Color { g: 0, a: 0 },
+    };
+
     let mut w = Window::<Event>::new()?;
-    let event_widget = Box::new(EventWidget::new(
-        (50, 50).into(),
-        Font {
-            font,
-            size: 50.0,
-            fg: Color { g: 255, a: 0 },
-            bg: Color { g: 0, a: 0 },
-        },
-    ));
+
+    let event_widget = Box::new(EventWidget::new((50, 50).into(), font));
+    let button = ButtonBuilder::new((100, 100).into(), (100, 100).into())
+        .with_events(ButtonEvent {
+            enter: Some(cygui::Event::User(Event::Enter)),
+            leave: Some(cygui::Event::User(Event::Leave)),
+            pressed: Some(cygui::Event::User(Event::Pressed)),
+            released: Some(cygui::Event::User(Event::Released)),
+            ..ButtonEvent::default()
+        })
+        .build();
 
     // Ajout des widgets
     w.frame.add_widget(event_widget);
+    w.frame.add_widget(Box::new(button));
 
     // Bloquant à l'infini
     w.mainloop()?;
